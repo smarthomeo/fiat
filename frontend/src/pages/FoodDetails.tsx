@@ -37,7 +37,7 @@ const FoodDetails = () => {
   useEffect(() => {
     const fetchExperience = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/food-experiences/${id}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/food-experiences/${id}`);
         if (!response.ok) throw new Error('Failed to fetch experience');
         const data = await response.json();
         setExperience(data);

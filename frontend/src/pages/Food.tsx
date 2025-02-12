@@ -79,7 +79,7 @@ const Food = () => {
     try {
       setLoading(true);
       const queryParams = new URLSearchParams(params);
-      const url = `http://localhost:5000/api/food-experiences?${queryParams}`;
+      const url = `${import.meta.env.VITE_API_URL}/food-experiences?${queryParams}`;
       
       const response = await fetch(url);
       if (!response.ok) {

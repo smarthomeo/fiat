@@ -153,8 +153,8 @@ export const FeaturedSection = () => {
     const fetchData = async () => {
       try {
         const [foodRes, staysRes] = await Promise.all([
-          fetch('http://localhost:5000/api/featured-food'),
-          fetch('http://localhost:5000/api/featured-stays')
+          fetch(`${import.meta.env.VITE_API_URL}/featured-food`),
+          fetch(`${import.meta.env.VITE_API_URL}/featured-stays`)
         ]);
 
         if (!foodRes.ok || !staysRes.ok) {

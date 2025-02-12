@@ -41,10 +41,10 @@ const HostDashboard = () => {
         const token = localStorage.getItem('token');
         
         const [foodRes, staysRes] = await Promise.all([
-          fetch('http://localhost:5000/api/host/food-experiences', {
+          fetch(`${import.meta.env.VITE_API_URL}/host/food-experiences`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          fetch('http://localhost:5000/api/host/stays', {
+          fetch(`${import.meta.env.VITE_API_URL}/host/stays`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ]);

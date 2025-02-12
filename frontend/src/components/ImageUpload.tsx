@@ -51,7 +51,7 @@ const ImageUpload = ({
       formData.append('title', title || 'upload');
 
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/upload', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -65,7 +65,7 @@ const ImageUpload = ({
       }
 
       const data = await response.json();
-      const fullUrl = `http://localhost:5000${data.url}`;
+      const fullUrl = `${import.meta.env.VITE_API_URL.replace('/api', '')}${data.url}`;
       const newUrls = [...value, fullUrl].filter(Boolean); // Filter out undefined/null values
       onChange(newUrls);
     } catch (error) {
@@ -167,7 +167,7 @@ const ImageUpload = ({
             >
               {(value || []).map((url, index) => {
                 if (!url) return null;
-                const imageUrl = url.startsWith('http') ? url : `http://localhost:5000${url}`;
+                const imageUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL.replace('/api', '')}${url}`;
                 
                 return (
                   <Draggable 

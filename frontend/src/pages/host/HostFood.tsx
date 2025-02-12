@@ -83,7 +83,7 @@ const HostFood = () => {
       const fetchExperience = async () => {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:5000/api/host/food-experiences/${id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/host/food-experiences/${id}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -188,8 +188,8 @@ const HostFood = () => {
       });
 
       const url = id 
-        ? `http://localhost:5000/api/host/food-experiences/${id}`
-        : 'http://localhost:5000/api/host/food-experiences';
+        ? `${import.meta.env.VITE_API_URL}/host/food-experiences/${id}`
+        : `${import.meta.env.VITE_API_URL}/host/food-experiences`;
 
       // Log the final FormData
       console.log('Final FormData entries:');

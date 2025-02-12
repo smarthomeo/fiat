@@ -131,7 +131,7 @@ const LocationSearch = () => {
 
       // Fetch nearby listings
       const response = await fetch(
-        `http://localhost:5000/api/listings/nearby?lat=${updatedLocation.latitude}&lng=${updatedLocation.longitude}`
+        `${import.meta.env.VITE_API_URL}/listings/nearby?lat=${updatedLocation.latitude}&lng=${updatedLocation.longitude}`
       );
       const data = await response.json();
       setNearbyListings(data);
@@ -191,7 +191,7 @@ const LocationSearch = () => {
             
             // Fetch nearby listings
             const listingsResponse = await fetch(
-              `http://localhost:5000/api/listings/nearby?lat=${latitude}&lng=${longitude}`
+              `${import.meta.env.VITE_API_URL}/listings/nearby?lat=${latitude}&lng=${longitude}`
             );
             const listings = await listingsResponse.json();
             setNearbyListings(listings);

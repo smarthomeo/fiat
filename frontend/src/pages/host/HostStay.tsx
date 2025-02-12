@@ -102,7 +102,7 @@ const HostStay = () => {
       const fetchStay = async () => {
         try {
           const token = localStorage.getItem('token');
-          const response = await fetch(`http://localhost:5000/api/host/stays/${id}`, {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/host/stays/${id}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -148,7 +148,7 @@ const HostStay = () => {
   useEffect(() => {
     const fetchAmenities = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/amenities?type=stay');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/amenities?type=stay`);
         if (!response.ok) throw new Error('Failed to fetch amenities');
         const data = await response.json();
         setSelectedAmenities([]);
@@ -200,8 +200,8 @@ const HostStay = () => {
       formData.append('longitude', data.longitude.toString());
 
       const url = id 
-        ? `http://localhost:5000/api/host/stays/${id}`
-        : 'http://localhost:5000/api/host/stays';
+        ? `${import.meta.env.VITE_API_URL}/host/stays/${id}`
+        : `${import.meta.env.VITE_API_URL}/host/stays`;
 
       const response = await fetch(url, {
         method: id ? 'PUT' : 'POST',

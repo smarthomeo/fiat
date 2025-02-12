@@ -72,7 +72,8 @@ const Stays = () => {
   useEffect(() => {
     const fetchStays = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/stays');
+        const url = `${import.meta.env.VITE_API_URL}/stays?${searchParams.toString()}`;
+        const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch stays');
         const data = await response.json();
         setStays(data);
@@ -84,7 +85,7 @@ const Stays = () => {
     };
 
     fetchStays();
-  }, []);
+  }, [searchParams]);
 
   const filteredStays = stays.filter(stay => {
     // Apply search filter
