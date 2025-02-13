@@ -1529,7 +1529,7 @@ def get_food_experience(id):
             'images': images,
             'host': {
                 'name': experience['host_name'],
-                'image': f"http://localhost:5000/uploads/{experience['host_image']}" if experience['host_image'] else '/default-avatar.png',
+                'image': f"http://localhost:5000/uploads/{experience['host_image']}" if experience['host_image'] else '/images/jollof.jpg',
                 'rating': float(experience['rating']),
                 'reviews': experience['reviews_count']
             },
@@ -1637,7 +1637,7 @@ def get_published_stays():
             # Add host details
             stay['host'] = {
                 'name': stay['host_name'],
-                'image': '/default-avatar.png',
+                'image': '/image/mountain.jpg',
                 'rating': 4.5,
                 'reviews': 10
             }
@@ -1712,7 +1712,7 @@ def get_featured_food():
                 'image': image_url,  # Single image for the card
                 'host': {
                     'name': exp['host_name'],
-                    'image': f"http://localhost:5000/uploads/{exp['host_image']}" if exp['host_image'] else '/default-avatar.png',
+                    'image': f"http://localhost:5000/uploads/{exp['host_image']}" if exp['host_image'] else '/image/mountain.jpg',
                     'rating': float(exp['rating']),
                     'reviews': exp['reviews_count']
                 },
@@ -1763,7 +1763,7 @@ def get_featured_stays():
                 
             stay['host'] = {
                 'name': stay['host_name'],
-                'image': '/default-avatar.png',
+                'image': '/image/mountain.jpg',
                 'rating': 4.5,
                 'reviews': 10
             }

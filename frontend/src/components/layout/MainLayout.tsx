@@ -163,7 +163,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                 <>
                   <div className="px-4 py-2 flex items-center gap-3">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={user.image || "/default-avatar.png"} />
+                      <AvatarImage src={user.image || "/images/sarah.jpg"} />
                       <AvatarFallback className="bg-purple-500 text-white text-lg">
                         {user.name?.charAt(0)}
                       </AvatarFallback>
