@@ -20,7 +20,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:8080"],
+        "origins": ["http://localhost:8080", "http://167.99.157.245"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "expose_headers": ["Content-Type"]
@@ -1184,8 +1184,13 @@ def upload_file(current_user):
             with open(filepath, 'wb') as f:
                 f.write(optimized.getvalue() if isinstance(optimized, BytesIO) else optimized.read())
             
+            # Return absolute URL in production
+            url = f"/uploads/{filename}"
+            if os.getenv('FLASK_ENV') == 'production':
+                url = f"http://167.99.157.245{url}"
+            
             return jsonify({
-                'url': f"/uploads/{filename}",
+                'url': url,
                 'message': 'File uploaded successfully'
             })
             
@@ -2012,4 +2017,3 @@ def upload_food_experience_images(current_user, experience_id):
 
 if __name__ == '__main__':
     app.run(debug=True) 
-

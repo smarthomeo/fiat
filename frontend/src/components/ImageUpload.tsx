@@ -65,11 +65,8 @@ const ImageUpload = ({
       }
 
       const data = await response.json();
-      // In production, use the BACKEND_URL, in development use the relative path
-      const baseUrl = import.meta.env.PROD 
-        ? import.meta.env.VITE_BACKEND_URL 
-        : import.meta.env.VITE_API_URL.replace('/api', '');
-      const fullUrl = `${baseUrl}${data.url}`;
+      // Just use the URL as is - it will be relative to the current domain
+      const fullUrl = data.url;
       const newUrls = [...value, fullUrl].filter(Boolean); // Filter out undefined/null values
       onChange(newUrls);
     } catch (error) {
@@ -171,11 +168,8 @@ const ImageUpload = ({
             >
               {(value || []).map((url, index) => {
                 if (!url) return null;
-                // In production, use the BACKEND_URL, in development use the relative path
-                const baseUrl = import.meta.env.PROD 
-                  ? import.meta.env.VITE_BACKEND_URL 
-                  : import.meta.env.VITE_API_URL.replace('/api', '');
-                const imageUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+                // URLs are always relative to the current domain
+                const imageUrl = url;
                 
                 return (
                   <Draggable 
