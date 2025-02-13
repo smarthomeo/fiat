@@ -96,7 +96,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
                         className="rounded-full w-12 h-12 bg-purple-100 hover:bg-purple-200 transition-colors"
                       >
                         <Avatar className="w-10 h-10">
-                          <AvatarImage src={user.image || "/default-avatar.png"} />
+                          <AvatarImage src={user.image || "/images/sarah.jpg"} />
                           <AvatarFallback className="bg-purple-500 text-white text-lg">
                             {user.name?.charAt(0)}
                           </AvatarFallback>
