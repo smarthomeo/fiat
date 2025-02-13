@@ -65,7 +65,11 @@ const ImageUpload = ({
       }
 
       const data = await response.json();
-      const fullUrl = `${import.meta.env.VITE_API_URL.replace('/api', '')}${data.url}`;
+      // In production, use the BACKEND_URL, in development use the relative path
+      const baseUrl = import.meta.env.PROD 
+        ? import.meta.env.VITE_BACKEND_URL 
+        : import.meta.env.VITE_API_URL.replace('/api', '');
+      const fullUrl = `${baseUrl}${data.url}`;
       const newUrls = [...value, fullUrl].filter(Boolean); // Filter out undefined/null values
       onChange(newUrls);
     } catch (error) {
@@ -167,7 +171,11 @@ const ImageUpload = ({
             >
               {(value || []).map((url, index) => {
                 if (!url) return null;
-                const imageUrl = url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL.replace('/api', '')}${url}`;
+                // In production, use the BACKEND_URL, in development use the relative path
+                const baseUrl = import.meta.env.PROD 
+                  ? import.meta.env.VITE_BACKEND_URL 
+                  : import.meta.env.VITE_API_URL.replace('/api', '');
+                const imageUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
                 
                 return (
                   <Draggable 
