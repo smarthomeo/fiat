@@ -18,17 +18,23 @@ from flask.json import JSONEncoder
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, resources={
-    r"/*": {
-        "origins": ["http://localhost:8080", "http://167.99.157.245"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "expose_headers": ["Content-Type"]
-    }
-})
+
+# CORS configuration based on environment
+if os.getenv('FLASK_ENV') == 'production':
+    CORS(app, resources={
+        r"/*": {
+            "origins": ["http://167.99.157.245"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "expose_headers": ["Content-Type"]
+        }
+    })
+else:
+    CORS(app)  # Allow all origins in development
 
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY', 'fallback-secret-key')
+app.config['BASE_URL'] = os.getenv('BASE_URL', 'http://167.99.157.245')
 DB_CONFIG = {
     'host': os.getenv('MYSQL_HOST', 'localhost'),
     'user': os.getenv('MYSQL_USER'),
@@ -44,6 +50,14 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Create uploads directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def get_full_url(path):
+    """Helper function to get full URL for a path"""
+    if path.startswith('http'):
+        return path
+    if os.getenv('FLASK_ENV') == 'production':
+        return f"{app.config['BASE_URL']}{path}"
+    return path
 
 # Database connection helper with error handling
 def get_db_connection():
@@ -147,7 +161,7 @@ def register():
         token = jwt.encode({
             'user_id': user['id'],
             'exp': datetime.now(timezone.utc) + timedelta(days=7)
-        }, app.config['SECRET_KEY'])
+        }, app.config['SECRET_KEY'], algorithm="HS256")
         
         return jsonify({
             'user': user,
@@ -201,7 +215,7 @@ def login():
         token = jwt.encode({
             'user_id': user['id'],
             'exp': datetime.now(timezone.utc) + timedelta(days=7)
-        }, app.config['SECRET_KEY'])
+        }, app.config['SECRET_KEY'], algorithm="HS256")
         
         return jsonify({
             'user': user,
@@ -492,7 +506,7 @@ def update_host_food_experience(current_user, id):
             if updated_exp['image_paths']:
                 for img_path in updated_exp['image_paths'].split(','):
                     if img_path:
-                        images.append({'url': f"http://localhost:5000/uploads/{img_path}"})
+                        images.append({'url': get_full_url(f"/uploads/{img_path}")})
             
             response = {
                 'id': updated_exp['id'],
@@ -569,7 +583,7 @@ def get_host_food_experiences(current_user):
                         full_path = os.path.join(UPLOAD_FOLDER, clean_path)
                         if os.path.exists(full_path):
                             valid_images.append({
-                                'url': f'http://localhost:5000/uploads/{clean_path}'
+                                'url': get_full_url(f"/uploads/{clean_path}")
                             })
                 exp['images'] = valid_images
             else:
@@ -815,7 +829,7 @@ def get_host_stays(current_user):
                     if ':' in img_data:
                         path, order = img_data.split(':')
                         image_list.append({
-                            'url': f"http://localhost:5000/uploads/{path.strip()}",
+                            'url': get_full_url(f"/uploads/{path.strip()}"),
                             'order': int(order)
                         })
                 stay['images'] = sorted(image_list, key=lambda x: x['order'])
@@ -920,7 +934,7 @@ def update_stay(current_user, id):
                     id, 
                     avail['date'],
                     avail['is_available'],
-                    avail.get('price_override', None),
+                    avail.get('price_override'),
                     datetime.now(timezone.utc),
                     datetime.now(timezone.utc)
                 ))
@@ -981,7 +995,7 @@ def update_stay(current_user, id):
                 for img_data in updated_stay['image_data'].split(','):
                     path, order = img_data.split(':')
                     images.append({
-                        'url': f"http://localhost:5000/uploads/{path}",
+                        'url': get_full_url(f"/uploads/{path}"),
                         'order': int(order)
                     })
             updated_stay['images'] = images
@@ -1185,9 +1199,7 @@ def upload_file(current_user):
                 f.write(optimized.getvalue() if isinstance(optimized, BytesIO) else optimized.read())
             
             # Return absolute URL in production
-            url = f"/uploads/{filename}"
-            if os.getenv('FLASK_ENV') == 'production':
-                url = f"http://167.99.157.245{url}"
+            url = get_full_url(f"/uploads/{filename}")
             
             return jsonify({
                 'url': url,
@@ -1205,9 +1217,24 @@ def upload_file(current_user):
         return jsonify({'error': f'File type not allowed. Allowed types are: {", ".join(ALLOWED_EXTENSIONS)}'}), 400
 
 # Add this to serve uploaded files
-@app.route('/uploads/<filename>')
+@app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    try:
+        # First try to serve from the uploads directory
+        if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], filename)):
+            return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+        
+        # If not found, try to serve default images from a static directory
+        static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+        if filename in ['default-avatar.png', 'default-food.jpg', 'jollof.jpg', 'mountain.jpg']:
+            if os.path.exists(os.path.join(static_dir, filename)):
+                return send_from_directory(static_dir, filename)
+        
+        # If neither found, return 404
+        return jsonify({'error': 'File not found'}), 404
+    except Exception as e:
+        print(f"Error serving file {filename}: {str(e)}")
+        return jsonify({'error': 'Error serving file'}), 500
 
 @app.route('/api/food-experiences', methods=['GET'])
 def get_food_experiences():
@@ -1266,7 +1293,7 @@ def get_food_experiences():
                         full_path = os.path.join(UPLOAD_FOLDER, clean_path)
                         if os.path.exists(full_path):
                             valid_images.append({
-                                'url': f'http://localhost:5000/uploads/{clean_path}'
+                                'url': get_full_url(f"/uploads/{clean_path}")
                             })
                 exp['images'] = valid_images
             else:
@@ -1327,7 +1354,7 @@ def get_optimized_image_path(original_path):
                 img.thumbnail(THUMBNAIL_SIZE)
                 img.save(thumb_path, 'JPEG', quality=85, optimize=True)
         
-        return f'thumbnails/thumb_{filename}'
+        return get_full_url(f"uploads/thumbnails/thumb_{filename}")
         
     except Exception as e:
         print(f"Error optimizing image {original_path}: {str(e)}")
@@ -1516,7 +1543,7 @@ def get_food_experience(id):
             
         # Handle image paths
         image_paths = experience['image_paths'].split(',') if experience['image_paths'] else []
-        images = [{'url': f"http://localhost:5000/uploads/{img}"} for img in image_paths if img]
+        images = [{'url': get_full_url(f"/uploads/{img}"} for img in image_paths if img]
         
         # Format the response
         response = {
@@ -1529,7 +1556,7 @@ def get_food_experience(id):
             'images': images,
             'host': {
                 'name': experience['host_name'],
-                'image': f"http://localhost:5000/uploads/{experience['host_image']}" if experience['host_image'] else '/images/jollof.jpg',
+                'image': get_full_url(f"/uploads/{experience['host_image']}") if experience['host_image'] else '/images/jollof.jpg',
                 'rating': float(experience['rating']),
                 'reviews': experience['reviews_count']
             },
@@ -1586,7 +1613,7 @@ def get_host_food_experience_by_id(current_user, id):
             'latitude': float(experience['latitude']),
             'longitude': float(experience['longitude']),
             'status': experience['status'],
-            'images': [{'url': img} for img in (experience['image_paths'].split(',') if experience['image_paths'] else [])],
+            'images': [{'url': get_full_url(f"/uploads/{img}")} for img in (experience['image_paths'].split(',') if experience['image_paths'] else [])],
             'duration': experience.get('duration', '2 hours'),
             'max_guests': experience.get('max_guests', 8),
             'language': experience.get('language', 'English')
@@ -1630,7 +1657,7 @@ def get_published_stays():
             
             # Format image URL
             if stay['image_path']:
-                stay['image'] = f"http://localhost:5000/uploads/{stay['image_path']}"
+                stay['image'] = get_full_url(f"/uploads/{stay['image_path']}")
             else:
                 stay['image'] = None
                 
@@ -1701,7 +1728,7 @@ def get_featured_food():
         response = []
         for exp in experiences:
             # Get the first image for the card
-            image_url = f"http://localhost:5000/uploads/{exp['first_image']}" if exp['first_image'] else '/default-food.jpg'
+            image_url = get_full_url(f"/uploads/{exp['first_image']}") if exp['first_image'] else '/default-food.jpg'
             
             response.append({
                 'id': exp['id'],
@@ -1712,7 +1739,7 @@ def get_featured_food():
                 'image': image_url,  # Single image for the card
                 'host': {
                     'name': exp['host_name'],
-                    'image': f"http://localhost:5000/uploads/{exp['host_image']}" if exp['host_image'] else '/image/mountain.jpg',
+                    'image': get_full_url(f"/uploads/{exp['host_image']}") if exp['host_image'] else '/image/mountain.jpg',
                     'rating': float(exp['rating']),
                     'reviews': exp['reviews_count']
                 },
@@ -1757,7 +1784,7 @@ def get_featured_stays():
             stay['updated_at'] = stay['updated_at'].isoformat()
             
             if stay['image_path']:
-                stay['image'] = f"http://localhost:5000/uploads/{stay['image_path']}"
+                stay['image'] = get_full_url(f"/uploads/{stay['image_path']}")
             else:
                 stay['image'] = None
                 
@@ -1865,7 +1892,7 @@ def get_host_stay(current_user, id):
             for img_data in stay['image_data'].split(','):
                 path, order = img_data.split(':')
                 images.append({
-                    'url': f"http://localhost:5000/uploads/{path}",
+                    'url': get_full_url(f"/uploads/{path}"),
                     'order': int(order)
                 })
         stay['images'] = images
